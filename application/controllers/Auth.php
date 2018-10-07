@@ -71,11 +71,19 @@ class Auth extends REST_Controller {
                 'password' => md5($this->post('password')),
                 'uuid' => uniqid(),
             );
-            if ($this->db->insert('users', $postUserData)) {
-                $user_id = $this->db->insert_id();
-                $this->set_response(['status' => TRUE, 'lastId' => $user_id, 'message' => 'User Inserted Successfully'], REST_Controller::HTTP_CREATED); // CREATED (201) being the HTTP response code
+            $this->db->select('uuid');
+            $this->db->from('users');
+            $this->db->where('email', $this->post('email'));           
+            $query = $this->db->get();
+            if ($query->num_rows() > 0) {
+                $this->response(['status' => FALSE, 'message' => 'Email Id already Exists !!'], REST_Controller::HTTP_OK); // BAD_REQUEST (400) being the HTTP response code
             } else {
-                $this->response(['status' => FALSE, 'message' => 'Something wents wrong !!'], REST_Controller::HTTP_OK); // BAD_REQUEST (400) being the HTTP response code
+                if ($this->db->insert('users', $postUserData)) {
+                    $user_id = $this->db->insert_id();
+                    $this->set_response(['status' => TRUE, 'lastId' => $user_id, 'message' => 'User Inserted Successfully'], REST_Controller::HTTP_CREATED); // CREATED (201) being the HTTP response code
+                } else {
+                    $this->response(['status' => FALSE, 'message' => 'Something wents wrong !!'], REST_Controller::HTTP_OK); // BAD_REQUEST (400) being the HTTP response code
+                }
             }
         } else {
             $this->response(['status' => FALSE, 'message' => 'Please enter required field'], REST_Controller::HTTP_BAD_REQUEST); // BAD_REQUEST (400) being the HTTP response code
@@ -130,9 +138,9 @@ class Auth extends REST_Controller {
         }
         return $return;
     }
-    
+
     public function isvalidPage_get() {
-        $tokenValid = $this->isvalidtoken();       
+        $tokenValid = $this->isvalidtoken();
         if ($tokenValid['error_type'] == '200') {
             $token = $this->generateToken($tokenValid['payload']);
             $this->set_response(['status' => TRUE, 'token' => $token], REST_Controller::HTTP_OK);
@@ -142,7 +150,7 @@ class Auth extends REST_Controller {
     }
 
     public function dashboard_get() {
-        $tokenValid = $this->isvalidtoken();       
+        $tokenValid = $this->isvalidtoken();
         if ($tokenValid['error_type'] == '200') {
             $token = $this->generateToken($tokenValid['payload']);
             $this->set_response(['status' => TRUE, 'token' => $token], REST_Controller::HTTP_OK);
