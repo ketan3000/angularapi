@@ -24,7 +24,7 @@ $config['datetime'] = date('Y-m-d H:i:s');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] = 'http://localhost/angularapi/';
+$config['base_url'] = 'http://13.127.221.54/angularapi/';
 
 /*
 |--------------------------------------------------------------------------
