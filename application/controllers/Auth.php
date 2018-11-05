@@ -73,7 +73,7 @@ class Auth extends REST_Controller {
             );
             $this->db->select('uuid');
             $this->db->from('users');
-            $this->db->where('email', $this->post('email'));           
+            $this->db->where('email', $this->post('email'));
             $query = $this->db->get();
             if ($query->num_rows() > 0) {
                 $this->response(['status' => FALSE, 'message' => 'Email Id already Exists !!'], REST_Controller::HTTP_OK); // BAD_REQUEST (400) being the HTTP response code
@@ -156,6 +156,41 @@ class Auth extends REST_Controller {
             $this->set_response(['status' => TRUE, 'token' => $token], REST_Controller::HTTP_OK);
         } else {
             $this->set_response("Unauthorised", REST_Controller::HTTP_UNAUTHORIZED);
+        }
+    }
+
+    public function menu_get() {
+        $topMenu = $this->getMenuList();
+        $menuArray = array();
+        if (!empty($topMenu)) {
+            foreach ($topMenu as $value) {
+              $menuArray['name'] = $value['product_name'];
+              $menuArray['slug'] = $value['product_slug']; 
+              $menuArray['is_submenu'] = $value['is_submenu']; 
+              $menuArray['children'] = $this->getMenuList($value['p_id']);
+              $menu[] = $menuArray;
+            } 
+            $this->set_response(['status' => TRUE, 'data' => $menu], REST_Controller::HTTP_OK);
+        }else{
+            $this->set_response(['status' => FALSE, 'message' => 'No record found'], REST_Controller::HTTP_OK);
+        }
+    }
+
+    public function getMenuList($parent_id = "") { // 1:top level 0:low level
+        $this->db->select('p_id,product_name,product_slug,is_submenu');
+        $this->db->from('products');
+        if ($parent_id) {
+            $this->db->where('parent_id', $parent_id);
+        } else {
+            $this->db->where('parent_id', 0);
+        }
+        $query = $this->db->get();
+        //echo $this->db->last_query().'<br>';//exit;
+
+        if ($query->num_rows() > 0) {
+            return $query->result_array();
+        } else {
+            return array();
         }
     }
 
